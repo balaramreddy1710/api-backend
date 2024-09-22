@@ -59,7 +59,7 @@ const extractData = (inputArray) => {
 };
 
 // POST request handler
-app.post("/bfhl", (req, res) => {
+app.post("/", (req, res) => {
   const { data, file_b64 } = req.body;
 
   if (!data) {
@@ -102,7 +102,7 @@ app.post("/bfhl", (req, res) => {
 });
 
 // GET request handler (hardcoded response)
-app.get("/bfhl", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({ operation_code: 1 });
 });
 
