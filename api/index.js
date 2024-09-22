@@ -48,6 +48,7 @@ const extractData = (inputArray) => {
   return { numbers, alphabets, highestLowercase };
 };
 
+app.get("/", (req, res) => res.send("Hello"));
 // POST request handler
 app.post("/bfhl", (req, res) => {
   const { data, file_b64 } = req.body;
