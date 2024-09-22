@@ -34,7 +34,7 @@ function processData(data) {
 
   return { numbers, alphabets, highestLowercase };
 }
-
+app.get("/", (req, res) => res.send("Hello"));
 // POST Method
 app.post("/bfhl", (req, res) => {
   try {
