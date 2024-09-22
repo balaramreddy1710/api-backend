@@ -1,9 +1,10 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const cors = require("cors");
 
 app.use(bodyParser.json());
-
+app.use(cors());
 const isValidBase64 = (fileBase64) => {
   // Check if the string is valid and non-empty
   return typeof fileBase64 === "string" && fileBase64.length > 0;
