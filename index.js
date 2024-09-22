@@ -1,112 +1,96 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors");
+
 const app = express();
+const port = process.env.PORT || 5000;
 
+// Middleware
 app.use(bodyParser.json());
+app.use(cors());
 
-// Check if Base64 string is valid (non-empty)
-const isValidBase64 = (fileBase64) => {
-  return typeof fileBase64 === "string" && fileBase64.length > 0;
-};
-
-// Determine MIME type based on Base64 string content
-const getMimeType = (base64String) => {
-  const hasAlpha = /[A-Za-z]/.test(base64String); // Check for letters
-  const hasDigits = /\d/.test(base64String); // Check for numbers
-
-  if (hasAlpha && hasDigits) {
-    return "image/png"; // Treat as image
-  } else if (!hasAlpha && hasDigits) {
-    return "doc/pdf"; // Treat as document (pdf/doc)
-  } else {
-    return null; // Invalid or unrecognized Base64 content
-  }
-};
-
-// Calculate file size in KB
-const calculateFileSizeKB = (base64String) => {
-  const cleanBase64String = base64String.split(",").pop(); // Remove prefix
-  let paddingBytes = 0;
-
-  if (cleanBase64String.endsWith("==")) {
-    paddingBytes = 2;
-  } else if (cleanBase64String.endsWith("=")) {
-    paddingBytes = 1;
-  }
-
-  const sizeBytes = (cleanBase64String.length * 3) / 4 - paddingBytes; // Calculate size
-  return (sizeBytes / 1024).toFixed(2); // Convert to KB
-};
-
-// Extract numbers, alphabets, and highest lowercase alphabet
-const extractData = (inputArray) => {
+// Utility function to process data
+function processData(data) {
   let numbers = [];
   let alphabets = [];
-  let highestLowercase = "";
+  let highestLowercase = [];
 
-  inputArray.forEach((item) => {
-    if (!isNaN(item)) {
+  data.forEach((item) => {
+    if (/^\d+$/.test(item)) {
       numbers.push(item);
-    } else if (/[a-zA-Z]/.test(item)) {
+    } else if (/^[A-Za-z]$/.test(item)) {
       alphabets.push(item);
-      if (item === item.toLowerCase() && item > highestLowercase) {
-        highestLowercase = item; // Track the highest lowercase letter
+      if (item === item.toLowerCase()) {
+        highestLowercase.push(item);
       }
     }
   });
 
+  if (highestLowercase.length > 0) {
+    highestLowercase = [highestLowercase.sort().pop()]; // Get the highest lowercase letter
+  } else {
+    highestLowercase = [];
+  }
+
   return { numbers, alphabets, highestLowercase };
-};
+}
 
-// POST request handler
+// POST Method
 app.post("/bfhl", (req, res) => {
-  const { data, file_b64 } = req.body;
+  try {
+    const { data, file_b64 } = req.body;
 
-  if (!data) {
-    return res.status(400).json({
-      is_success: false,
-      message: "Missing 'data' field in the request.",
-    });
-  }
+    const userId = "vaishnavi_kumari_14012004"; // Example user id
+    const email = "vb0206@srmist.edu.in";
+    const rollNumber = "RA2111032010017";
 
-  const { numbers, alphabets, highestLowercase } = extractData(data);
-  const user_id = "john_doe_17091999"; // Hardcoded for example
-  const email = "john@xyz.com"; // Hardcoded for example
-  const roll_number = "ABCD123"; // Hardcoded for example
+    // Process the input data
+    const { numbers, alphabets, highestLowercase } = processData(data);
 
-  // File handling
-  let file_valid = false;
-  let file_mime_type = null;
-  let file_size_kb = "0";
+    // Handle file validation
+    let fileValid = false;
+    let fileMimeType = "";
+    let fileSizeKb = 0;
 
-  if (file_b64) {
-    file_valid = isValidBase64(file_b64);
-    if (file_valid) {
-      file_mime_type = getMimeType(file_b64);
-      file_size_kb = calculateFileSizeKB(file_b64);
+    if (file_b64) {
+      try {
+        const fileBuffer = Buffer.from(file_b64, "base64"); // Use Buffer instead of atob
+        fileSizeKb = (fileBuffer.length / 1024).toFixed(2); // Convert bytes to KB
+        fileValid = true;
+        fileMimeType = "application/octet-stream"; // You can add more MIME type logic if needed
+      } catch (err) {
+        fileValid = false;
+      }
     }
-  }
 
-  return res.status(200).json({
-    is_success: true,
-    user_id: user_id,
-    email: email,
-    roll_number: roll_number,
-    numbers: numbers,
-    alphabets: alphabets,
-    highest_lowercase_alphabet: highestLowercase ? [highestLowercase] : [],
-    file_valid: file_valid,
-    file_mime_type: file_mime_type,
-    file_size_kb: file_valid ? file_size_kb : "0",
+    // Create the response object
+    const response = {
+      is_success: true,
+      user_id: userId,
+      email: email,
+      roll_number: rollNumber,
+      numbers: numbers,
+      alphabets: alphabets,
+      highest_lowercase_alphabet: highestLowercase,
+      file_valid: fileValid,
+      file_mime_type: fileMimeType,
+      file_size_kb: fileSizeKb,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    return res.status(400).json({ is_success: false, error: error.message });
+  }
+});
+
+// GET Method
+app.get("/bfhl", (req, res) => {
+  res.json({
+    operation_code: 1,
   });
 });
 
-// GET request handler (hardcoded response)
-app.get("/bfhl", (req, res) => {
-  res.status(200).json({ operation_code: 1 });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
