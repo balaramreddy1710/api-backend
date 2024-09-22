@@ -40,9 +40,9 @@ app.post("/bfhl", (req, res) => {
   try {
     const { data, file_b64 } = req.body;
 
-    const userId = "vaishnavi_kumari_14012004"; // Example user id
-    const email = "vb0206@srmist.edu.in";
-    const rollNumber = "RA2111032010017";
+    const user_id = "john_doe_17091999";
+    const email = "john@xyz.com";
+    const roll_number = "ABCD123";
 
     // Process the input data
     const { numbers, alphabets, highestLowercase } = processData(data);
